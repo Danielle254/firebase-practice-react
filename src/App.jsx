@@ -6,33 +6,42 @@ import OrganizeList from './components/OrganizeList'
 import EntryList from './components/EntryList'
 import Footer from './components/Footer'
 import EditEntry from './components/EditEntry'
-
+import {onSnapshot, addDoc, doc, deleteDoc, setDoc } from 'firebase/firestore'
+import { entriesCollection, database } from './firebase'
 
 function App() {
-  const [data, setData] = useState(() => JSON.parse(localStorage.getItem('SDAT_data')) || []);
+  const [data, setData] = useState([]);
   const [sortBy, setSortBy] = useState(() => JSON.parse(localStorage.getItem('SDAT_sort')) || "date");  
   const [filterFavorites, setFilterFavorites] = useState(JSON.parse(localStorage.getItem('SDAT_filter')) || false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [entryToEdit, setEntryToEdit] = useState({});
 
   useEffect(() => {
-    localStorage.setItem('SDAT_data', JSON.stringify(data));
-  }, [data]);
+    const unsubscribe = onSnapshot(entriesCollection, function(snapshot) {
+      const entriesArr = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      }))
+      setData(entriesArr);
+    })
+    return unsubscribe
+  }, []);
 
 
-  function addEntry (e, entry) {
+  async function addEntry (e, entry) {
     e.preventDefault();
-    setData([...data, entry]);    
+    try {
+      const docRef = await addDoc(entriesCollection, entry);
+    }
+    catch (e) {
+      console.log("there was an error adding doc");
+    }    
   }
 
 
-  function deleteEntry (id) {
-    setData(prevData => {
-      const newData = prevData.filter(
-        item => item.id !== id
-      )
-      return newData;
-    })
+  async function deleteEntry (id) {
+    const docRef = doc(database, "entries", id);
+    await deleteDoc(docRef);
   }  
 
 
@@ -66,14 +75,17 @@ function App() {
     }
   }
 
-  function closeEditor (e, entry) {
+  async function closeEditor (e, entry) {
     e.preventDefault();
     setEditorOpen(false);
-    console.log("function ran");
-    const indexToUpdate = data.findIndex((each) => each.id === entry.id);
+
+    const docRef = doc(database, "entries", entry.id);
+    await setDoc(docRef, entry);
+    
+    /* const indexToUpdate = data.findIndex((each) => each.id === entry.id);
     console.log(indexToUpdate);
     const newData = data.toSpliced(indexToUpdate, 1, entry);
-    setData(newData);
+    setData(newData); */
   }
 
   function cancelEdit () {
