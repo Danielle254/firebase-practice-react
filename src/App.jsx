@@ -38,12 +38,10 @@ function App() {
     }    
   }
 
-
   async function deleteEntry (id) {
     const docRef = doc(database, "entries", id);
     await deleteDoc(docRef);
   }  
-
 
   function changeSort () {         
     if (sortBy === "date") { 
@@ -54,14 +52,12 @@ function App() {
       setSortBy("date");
       localStorage.setItem('SDAT_sort', JSON.stringify("date"));        
     }    
-  }
-  
+  }  
 
   function toggleFilterFavorites () {    
     setFilterFavorites(!filterFavorites);    
     localStorage.setItem('SDAT_filter', JSON.stringify(!filterFavorites));
   }
-
   
   function openEditor (id) {   
     const editIndex = data.findIndex((each) => each.id === id);    
@@ -78,14 +74,8 @@ function App() {
   async function closeEditor (e, entry) {
     e.preventDefault();
     setEditorOpen(false);
-
     const docRef = doc(database, "entries", entry.id);
-    await setDoc(docRef, entry);
-    
-    /* const indexToUpdate = data.findIndex((each) => each.id === entry.id);
-    console.log(indexToUpdate);
-    const newData = data.toSpliced(indexToUpdate, 1, entry);
-    setData(newData); */
+    await setDoc(docRef, entry);    
   }
 
   function cancelEdit () {
